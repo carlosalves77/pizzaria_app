@@ -5,12 +5,23 @@ import android.graphics.Color
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
+import androidx.recyclerview.widget.GridLayoutManager
+import com.carlosdev.pizzariaapp.adapter.ProductAdapter
 import com.carlosdev.pizzariaapp.databinding.ActivityMainBinding
+import com.carlosdev.pizzariaapp.listitems.Products
+import com.carlosdev.pizzariaapp.model.Product
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.collectIndexed
+import kotlinx.coroutines.launch
 
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
+    private lateinit var productAdapter: ProductAdapter
+    private val products = Products()
+    private val productList: MutableList<Product> = mutableListOf()
     var clicked = false
 
     @SuppressLint("ResourceAsColor", "SetTextI18n")
@@ -19,7 +30,23 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
 
-    supportActionBar?.hide()
+       window.statusBarColor = Color.parseColor("#E0E0E0")
+
+        CoroutineScope(Dispatchers.IO).launch {
+            products.getProducts().collectIndexed {
+                index, value ->
+                for (p in value) {
+                    productList.add(p)
+                }
+            }
+        }
+
+        val recyclerViewProducts = binding.recyclerViewProducts
+        recyclerViewProducts.layoutManager = GridLayoutManager(this, 2)
+        recyclerViewProducts.setHasFixedSize(true)
+        productAdapter = ProductAdapter(this, productList)
+        recyclerViewProducts.adapter = productAdapter
+
 
         binding.btAll.setOnClickListener {
             clicked = true
@@ -64,7 +91,7 @@ class MainActivity : AppCompatActivity() {
                 binding.btAll.setTextColor(R.color.dark_gray)
                 binding.btKebab.setBackgroundResource(R.drawable.bg_button_disabled)
                 binding.btKebab.setTextColor(R.color.dark_gray)
-                binding.recyclerViewProducts.visibility = View.INVISIBLE
+                binding.recyclerViewProducts.visibility = View.VISIBLE
                 binding.textListTitle.text = "Pizza"
 
             }
